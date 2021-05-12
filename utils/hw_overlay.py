@@ -1,10 +1,11 @@
 """
 Description: model-dependent wiring and behavior
 """
+
 # copy and paste definitions for your model at the bottom of this file
 
 # model 0000 (my prototype)
-BTN_R = 6 
+BTN_R = 6
 BTN_L = 5
 ACTIVE_HIGH = 0
 LCD_RS = 24
@@ -25,6 +26,8 @@ LCD_D4 = 24
 LCD_D5 = 25
 LCD_D6 = 8
 LCD_D7 = 7
+COLS = 16
+ROWS = 2
 
 # models 0010-
 # custom PCB v1
@@ -37,3 +40,16 @@ LCD_D4 = 9
 LCD_D5 = 11
 LCD_D6 = 5
 LCD_D7 = 6
+COLS = 16
+ROWS = 2
+
+# I2C model
+# Use i2cdetect -a 1 to find address
+BTN_R = 22
+BTN_L = 27
+ACTIVE_HIGH = 1
+I2C = True
+COLS = 20
+ROWS = 4
+I2CADDR = 0x27
+I2CEXPANDER = 'PCF8574'
