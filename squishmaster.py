@@ -9,9 +9,9 @@ import pygame
 from utils import netlink, stompboxpi as SB
 
 
-SQUISHMASTER_VERSION = '0.1'
+SQUISHMASTER_VERSION = '0.2'
 
-############################## Softsynth ##############################
+################################## Softsynth ##################################
 
 def scan_midiports():
     midiports = {}
@@ -57,6 +57,37 @@ def load_bank_menu():
     return True
 
 def squishpatch():
+
+    global pxr
+
+# initialise the patcher
+    if len(sys.argv) > 1:
+        cfgfile = sys.argv[1]
+    else:
+        cfgfile = '/home/pi/SquishBox/squishboxconf.yaml'
+    try:
+        pxr = patcher.Patcher(cfgfile)
+    except patcher.PatcherError:
+        sb.lcd_write('bad config file!', 1)
+        sys.exit('bad config file')
+
+# hack to connect MIDI devices to old versions of fluidsynth
+    midiports = scan_midiports()
+    for client in midiports:
+        if client == 'FLUID Synth':
+            continue
+        subprocess.run(['aconnect', midiports[client], midiports['FLUID Synth']])
+
+# load bank
+    sb.lcd_write('loading patches', 1)
+    try:
+        pxr.load_bank(pxr.currentbank)
+    except patcher.PatcherError:
+        while True:
+            sb.lcd_write('bank load error!', 1)
+            sb.waitfortap(10)
+            if load_bank_menu():
+                break
 
 # initialize network link
     if pxr.cfg.get('remotelink_active', 0):
@@ -461,7 +492,7 @@ def squishpatch():
                     else:
                         remote_link.reply(req)
 
-############################## Player ##############################
+############################## Sound File Player ##############################
 
 # Play a song - allow pause, resume, & stop
 
@@ -741,7 +772,7 @@ def squishplayer():
 
                 break
 
-############################## Control ##############################
+################################### Control ###################################
 
 sb = SB.StompBox()
 sb.lcd_clear()
@@ -749,35 +780,6 @@ sb.lcd_write('SquishMaster v%s' % SQUISHMASTER_VERSION, 0)
 pygame.init()
 
 os.umask(0o002)
-
-# initialise the patcher
-if len(sys.argv) > 1:
-    cfgfile = sys.argv[1]
-else:
-    cfgfile = '/home/pi/SquishBox/squishboxconf.yaml'
-try:
-    pxr = patcher.Patcher(cfgfile)
-except patcher.PatcherError:
-    sb.lcd_write('bad config file!', 1)
-    sys.exit('bad config file')
-
-# hack to connect MIDI devices to old versions of fluidsynth
-midiports = scan_midiports()
-for client in midiports:
-    if client == 'FLUID Synth':
-        continue
-    subprocess.run(['aconnect', midiports[client], midiports['FLUID Synth']])
-
-# load bank
-sb.lcd_write('loading patches', 1)
-try:
-    pxr.load_bank(pxr.currentbank)
-except patcher.PatcherError:
-    while True:
-        sb.lcd_write('bank load error!', 1)
-        sb.waitfortap(10)
-        if load_bank_menu():
-            break
 
 while True:
     sb.lcd_write('Options:', 0)
